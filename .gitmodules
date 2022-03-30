@@ -1,0 +1,3 @@
+[submodule "PCB/kicad-libs"]
+	path = PCB/kicad-libs
+	url = https://github.com/j1and1/kicad-libs.git
