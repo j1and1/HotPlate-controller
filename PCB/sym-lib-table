@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name Nokia_5510_display_module)(type Legacy)(uri ${KIPRJMOD}/kicad-libs/Nokia_5510_display_module.lib)(options "")(descr ""))
+)
