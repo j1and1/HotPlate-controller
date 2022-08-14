@@ -44,8 +44,15 @@ void TemperatureControl::runLoop()
       const double t2 = CURVE_TIME[curvePhase + 1];
       const double p1 = CURVE_TEMP[curvePhase];
       const double p2 = CURVE_TEMP[curvePhase + 1];
-      // find target temperature with linear interpulation
-      targetTemp = ((p2 - p1) / (t2 - t1)) * (((double) currentRuntime) - t1);
+      if (p1 == p2)
+      {
+        targetTemp = p2;
+      }
+      else
+      {
+        // find target temperature with linear interpulation
+        targetTemp = ((p2 - p1) / (t2 - t1)) * (((double) currentRuntime) - t1);
+      }
     }
 
     // TODO: add PID controller here, for now lets just use hard ON/OFF for thermal control
@@ -61,7 +68,7 @@ void TemperatureControl::runLoop()
     // update time variable used for thermal runaway if the temperature is within spec
     const double highBound = lastTemp + THERMAL_RUNAWAY_DEGREE_DIFF;
     const double lowBound = lastTemp - THERMAL_RUNAWAY_DEGREE_DIFF;
-    if (lowBound <= currentTemp && currentTemp <= lowBound)
+    if (lowBound <= currentTemp && currentTemp <= highBound)
     {
       lastTempIncrease = millis();
     }      
