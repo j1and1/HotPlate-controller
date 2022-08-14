@@ -1,6 +1,7 @@
 #pragma once
 // thermal resistor library -> https://github.com/miguel5612/ThermistorLibrary
 #include <thermistor.h>
+#include "Configuration.h"
 
 class TemperatureControl
 {
@@ -11,7 +12,7 @@ public:
   void runLoop();
 
   // getters and setters for target temperature
-  inline void setTargetTemp(double temp) { targetTemp = temp; }
+  inline void setTargetTemp(double temp) { targetTemp = min(MAX_TEMP, max(temp, 0)); }
   inline double getTargetTemp() const { return targetTemp; }
 
   // enable/disable use of reflow curve

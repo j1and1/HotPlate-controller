@@ -1,7 +1,5 @@
 #include "TemperatureControl.h"
 
-#include "Configuration.h"
-
 TemperatureControl::TemperatureControl()
   : therm1(SENS1, SENS1_TYPE)
 {
@@ -12,7 +10,7 @@ TemperatureControl::TemperatureControl()
 
 void TemperatureControl::runLoop()
 {
-  if (targetTemp > 0.0 && isHeating)
+  if ((targetTemp > 0.0 || useCurve) && isHeating)
   {
     double currentTemp = therm1.analog2temp();
     // detect thermal runaway
@@ -27,7 +25,7 @@ void TemperatureControl::runLoop()
     if (useCurve)
     {
       // find time and target temp
-      unsigned int currentRuntime = millis() - heatingStart;
+      double currentRuntime = (double) ((millis() - heatingStart) / 1000);
       // check to see if we have more points in curve, if not then disable heating
       if (curvePhase + 1 >= CURVE_SIZE)
       {
@@ -42,12 +40,12 @@ void TemperatureControl::runLoop()
         curvePhase++;
       }
 
-      const double t1 = (double) CURVE_TIME[curvePhase];
-      const double t2 = (double) CURVE_TIME[curvePhase + 1];
+      const double t1 = CURVE_TIME[curvePhase];
+      const double t2 = CURVE_TIME[curvePhase + 1];
       const double p1 = CURVE_TEMP[curvePhase];
       const double p2 = CURVE_TEMP[curvePhase + 1];
       // find target temperature with linear interpulation
-      targetTemp = ((p2 - p1)/(t2 - t1)) * (((double) currentRuntime) - t1);
+      targetTemp = ((p2 - p1) / (t2 - t1)) * (((double) currentRuntime) - t1);
     }
 
     // TODO: add PID controller here, for now lets just use hard ON/OFF for thermal control
@@ -71,6 +69,7 @@ void TemperatureControl::runLoop()
   }
   else
   {
+    lastTemp = therm1.analog2temp();
     digitalWrite(OUT1, LOW);
   }
 }

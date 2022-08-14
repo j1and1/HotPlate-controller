@@ -5,6 +5,9 @@
 #include "Configuration.h"
 #include "TemperatureControl.h"
 
+TemperatureControl tc;
+
+// Display related variables
 // Software SPI (slower updates, more flexible pin options):
 // pin 13 - Serial clock out (SCLK)
 // pin 11 - Serial data out (DIN)
@@ -51,7 +54,16 @@ void setup() {
 
 void loop() {
   displayMenu();
-  doMenuAction();
+  // check if thermal runaway
+  if (tc.isThermalRunawayDetected())
+  {
+    page = 2;
+  }
+  else
+  {
+    doMenuAction();
+  }
+  tc.runLoop();
 }
 
 void displayMenu()
@@ -90,6 +102,7 @@ void displayMenu()
     display.setTextColor(BLACK, WHITE);
     display.setCursor(0, 35);
     display.print("Temp C: ");
+    display.print(tc.getLastTemp());
     display.display();
   }
   else if (page == 1) 
@@ -104,7 +117,7 @@ void displayMenu()
     display.print("Value");
     display.setTextSize(2);
     display.setCursor(5, 25);
-    //display.print(targetTemp);
+    display.print((int) tc.getTargetTemp());
  
     display.setTextSize(2);
     display.display();
@@ -119,14 +132,28 @@ void displayMenu()
     display.drawFastHLine(0,10,83,BLACK);
     display.setCursor(5, 15);
     display.print("Thermal");
-    display.setTextSize(2);
     display.setCursor(5, 25);
     display.print("runaway");
     display.display();
   }
   else
   {
-    
+    display.setTextSize(1);
+    display.clearDisplay();
+    display.setTextColor(BLACK, WHITE);
+    display.setCursor(15, 0);
+    display.print("Heating");
+    display.drawFastHLine(0,10,83,BLACK);
+    display.setCursor(5, 15);
+    display.print("Time:");
+    const unsigned long t = (millis() - tc.getHeaterStartTime()) / 1000;
+    display.print(t);
+    display.setCursor(5, 25);
+    display.print("T:");
+    display.print(tc.getLastTemp());
+    display.print("/");
+    display.print((int) tc.getTargetTemp());
+    display.display();
   }
 }
 
@@ -150,7 +177,7 @@ void doMenuAction()
   }
   else if (up && page == 1 ) 
   {
-    up = false;
+    tc.setTargetTemp(tc.getTargetTemp() + 1);
   }
 
 
@@ -164,16 +191,33 @@ void doMenuAction()
   }
   else if (down && page == 1) 
   {
-    down = false;
+    tc.setTargetTemp(tc.getTargetTemp() - 1);
   }
 
   if (middle) {
     middle = false;
-    
+
+    // set fixed temperature
     if (page == 0 && menuitem==0) {
       page = 1;
     }
+    // reflow curve
+    else if (page == 0 && menuitem == 1)
+    {
+      tc.setUseReflowCurve(true);
+      tc.setIsHeating(true);
+      page = 3;
+    }
+    // heat the 
     else if (page == 1) {
+      tc.setUseReflowCurve(false);
+      tc.setIsHeating(true);
+      page = 3;
+    }
+    // disable heating and move back
+    else
+    {
+      tc.setIsHeating(false);
       page = 0;
     }
   }
@@ -187,6 +231,10 @@ void checkIfDownButtonIsPressed()
     {
       down = true;
     }
+    else
+    {
+      down = false;
+    }
     delay(50);
   }
   lastDownButtonState = downButtonState;
@@ -198,6 +246,10 @@ void checkIfUpButtonIsPressed()
   {
     if (upButtonState == 0) {
       up = true;
+    }
+    else
+    {
+      up = false;
     }
     delay(50);
   }
