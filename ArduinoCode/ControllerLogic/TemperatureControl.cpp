@@ -55,7 +55,7 @@ void TemperatureControl::runLoop()
       }
     }
 
-    // TODO: add PID controller here, for now lets just use hard ON/OFF for thermal control
+    // TODO: add PID controller here (because of thermal mass of the heater), and adjust thermal runaway code to take into account state of the output pin
     if (currentTemp < targetTemp)
     {
       digitalWrite(OUT1, HIGH);
