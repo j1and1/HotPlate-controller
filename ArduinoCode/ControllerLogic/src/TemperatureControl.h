@@ -39,6 +39,12 @@ private:
   unsigned long heatingStart { 0 };
   double targetTemp { 0.0 };
   bool isHeating { false };
+
+  // PID related values
+  double lastDiff { 0.0 };
+  double integral { 0.0 };
+  unsigned long lastPidTime { 0 };
+
   // reflow curve related variables
   char curvePhase { 0 };
   bool useCurve { false };

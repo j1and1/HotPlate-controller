@@ -56,7 +56,16 @@ void TemperatureControl::runLoop()
     }
 
     // TODO: add PID controller here (because of thermal mass of the heater), and adjust thermal runaway code to take into account state of the output pin
-    if (currentTemp < targetTemp)
+    const auto now = millis();
+    const auto dt = static_cast<double>(now - lastPidTime) / 1000.0;
+    const double diff = targetTemp - currentTemp;
+    integral = integral + diff * static_cast<double>(dt);
+    const double dxdt = (diff - lastDiff) / static_cast<double>(dt);
+    lastDiff = diff;
+    lastPidTime = now;
+
+    const double output = diff * P + integral * I + dxdt * D;
+    if (output > 0.0)
     {
       digitalWrite(OUT1, HIGH);
     }
@@ -64,6 +73,7 @@ void TemperatureControl::runLoop()
     {
       digitalWrite(OUT1, LOW);
     }
+    Serial.println(output);
 
     // update time variable used for thermal runaway if the temperature is within spec
     const double highBound = lastTemp + THERMAL_RUNAWAY_DEGREE_DIFF;
@@ -87,6 +97,8 @@ void TemperatureControl::setIsHeating(bool newValue)
   if (newValue)
   {
     curvePhase = 0;
-    heatingStart = lastTempIncrease = millis();
+    lastPidTime = heatingStart = lastTempIncrease = millis();
+    lastDiff = 0.0;
+    integral = 0.0;
   }
 }

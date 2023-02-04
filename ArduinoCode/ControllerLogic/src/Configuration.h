@@ -15,8 +15,8 @@
 #define THERMAL_RUNAWAY_TIMEOUT 60000 // milliseconds
 #define THERMAL_RUNAWAY_DEGREE_DIFF 3
 // temperature PID controller values (just stole these from my 3D printer configuration)
-#define P 29.12
-#define I 3.22
+#define P 13.12
+#define I 1.522
 #define D 65.83
 // maximum temperature the heatplate can reach (according to spec sheet)
 #define MAX_TEMP 260
